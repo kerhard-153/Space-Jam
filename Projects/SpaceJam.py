@@ -1,6 +1,7 @@
 from direct.showbase.ShowBase import ShowBase
 import SpaceJamClasses as sjcRef
 import DefensePaths as dpRef
+from panda3d.core import Vec3
 
 class MyApp(ShowBase):
 
@@ -12,14 +13,16 @@ class MyApp(ShowBase):
         self.SetupScene()
 
 
-        fullCycle = 60
+        # fullCycle = 60
 
         # for j in range(fullCycle):
         #     sjcRef.Drone.droneCount += 1
         #     nickName = "Drone" + str(sjcRef.Drone.droneCount)
 
         #     self.DrawCloudDefense(self.Planet1, nickName)
-        #     self.DrawBaseballSeams(self.Spacestation, nickName, j, fullCycle, 2)
+        #     self.DrawBaseballSeams(self.SpaceStation, nickName, j, fullCycle, 2)
+
+        
 
     def SetupScene(self):
         
@@ -30,7 +33,8 @@ class MyApp(ShowBase):
         self.Planet4 = sjcRef.Planet(self.loader,"./Assets/Planets/protoPlanet.x", self.render, "Planet4", "./Assets/Planets/Dusty_01.png", (8000, 8000, 800), 200)
         self.Planet5 = sjcRef.Planet(self.loader,"./Assets/Planets/protoPlanet.x", self.render, "Planet5", "./Assets/Planets/Gaseous_02.png", (4000, -2000, 1000), 450)
         self.Planet6 = sjcRef.Planet(self.loader,"./Assets/Planets/protoPlanet.x", self.render, "Planet6", "./Assets/Planets/Snowy_03.png", (300, -3000, -8000), 700)
-        self.SpaceStation = sjcRef.SpaceStation(self.loader,"./Assets/SpaceStation/spaceStation.x", self.render, "SpaceStation", "./Assets/SpaceStation/SpaceStation1_Dif2.png", (1500, 1000, 100), 40)
+        self.SpaceStation = sjcRef.SpaceStation(self.loader,"./Assets/SpaceStation/spaceStation.x", self.render, "SpaceStation", "./Assets/SpaceStation/SpaceStation1_Dif2.png", (1500, 1000, -100), 40)
+        self.Spaceship = sjcRef.Spaceship(self.loader,"./Assets/Spaceship/Dumbledore.x", self.render, "Spaceship", "./Assets/Spaceship/spacejet_C.png", Vec3(1000, 3000, -50), 50)
 
 
     def DrawBaseballSeams(self, centralObject, droneName, step, numSeams, radius = 1):
