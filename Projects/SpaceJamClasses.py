@@ -31,7 +31,7 @@ class Drone(ShowBase):
     
     droneCount = 0
 
-    def __init__(self, loader, modelPath: str, parentNode, nodeName: str, texPath: str, posVec, scaleVec: float):
+    def __init__(self, loader, modelPath: str, parentNode, nodeName: str, texPath: str, posVec, scaleVec: float, color = (1, 1, 1, 1)):
 
         self.modelNode = loader.loadModel(modelPath)
         self.modelNode.reparentTo(parentNode)
@@ -41,6 +41,8 @@ class Drone(ShowBase):
         self.modelNode.setName(nodeName)
         tex = loader.loadTexture(texPath)
         self.modelNode.setTexture(tex, 1)
+
+        self.modelNode.setColor(*color, 1)
 
 class SpaceStation(ShowBase):
 

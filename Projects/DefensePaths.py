@@ -33,3 +33,27 @@ def BaseballSeams(step, numSeams, B, F = 1):
     z = R * zzz / rrr
 
     return Vec3(x, y, z)
+
+def Circles(radius = 1, axis = 'z', index = 0, count = 12):
+
+        angle = (2 * math.pi / count) * index
+
+        if axis == 'z':
+            
+            x = math.cos(angle) * radius
+            y = math.sin(angle) * radius
+            z = 0
+
+        elif axis == 'x':
+
+            x = 0
+            y = math.cos(angle) * radius
+            z = math.sin(angle) * radius
+
+        elif axis == 'y':
+
+            x = math.cos(angle) * radius
+            y = 0
+            z = math.sin(angle) * radius
+
+        return Vec3(x, y, z)

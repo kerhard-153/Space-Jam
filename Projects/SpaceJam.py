@@ -2,6 +2,7 @@ from direct.showbase.ShowBase import ShowBase
 import SpaceJamClasses as sjcRef
 import DefensePaths as dpRef
 from panda3d.core import Vec3
+import math, random, sys
 
 class MyApp(ShowBase):
 
@@ -13,14 +14,33 @@ class MyApp(ShowBase):
         self.SetupScene()
 
 
-        # fullCycle = 60
+        fullCycle = 60
+        
 
-        # for j in range(fullCycle):
-        #     sjcRef.Drone.droneCount += 1
-        #     nickName = "Drone" + str(sjcRef.Drone.droneCount)
+        for j in range(fullCycle):
+            sjcRef.Drone.droneCount += 1
+            nickName = "Drone" + str(sjcRef.Drone.droneCount)
 
-        #     self.DrawCloudDefense(self.Planet1, nickName)
-        #     self.DrawBaseballSeams(self.SpaceStation, nickName, j, fullCycle, 2)
+            self.DrawCloudDefense(self.Planet1, nickName)
+            self.DrawBaseballSeams(self.SpaceStation, nickName, j, fullCycle, 2)
+        
+
+        self.DrawCircles(self.Spaceship, axis = 'x', color = (1, 0, 0, 1))
+        self.DrawCircles(self.Spaceship, axis = 'y', color = (0, 1, 0, 1))
+        self.DrawCircles(self.Spaceship, axis = 'z', color = (0, 0, 1, 1))    
+        
+
+
+    def DrawCircles(self, centralObject, axis = 'z', radius = 500, count = 12, color = (1, 1, 1, 1)):
+            
+        for i in range(count):
+
+            centralOffset = dpRef.Circles(radius, axis, i, count)    
+            position = centralOffset + centralObject.modelNode.getPos()
+
+            droneName = f"{axis}Drone{i}"
+
+            sjcRef.Drone(self.loader, "./Assets/DroneDefender/DroneDefender.x", self.render, droneName, "./Assets/DroneDefender/octotoad1_auv.png", position, 5,  color = color)
 
         
 
