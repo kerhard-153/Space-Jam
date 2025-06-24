@@ -13,6 +13,7 @@ class MyApp(ShowBase):
 
         self.SetupScene()
 
+        self.SetCamera()
 
         fullCycle = 60
         
@@ -27,9 +28,34 @@ class MyApp(ShowBase):
 
         self.DrawCircles(self.Spaceship, axis = 'x', color = (1, 0, 0, 1))
         self.DrawCircles(self.Spaceship, axis = 'y', color = (0, 1, 0, 1))
-        self.DrawCircles(self.Spaceship, axis = 'z', color = (0, 0, 1, 1))    
-        
+        self.DrawCircles(self.Spaceship, axis = 'z', color = (0, 0, 1, 1)) 
 
+        self.SetKeyBindings() 
+
+    def SetKeyBindings(self):
+        self.accept("space", self.Spaceship.Thrust, [1])
+        self.accept("space-up", self.Spaceship.Thrust, [0]) 
+        self.accept("a", self.Spaceship.LeftTurn, [1])
+        self.accept("a-up", self.Spaceship.LeftTurn, [0])
+        self.accept("d", self.Spaceship.RightTurn, [1])
+        self.accept("d-up", self.Spaceship.RightTurn, [0])     
+        self.accept("w", self.Spaceship.LookUp, [1])
+        self.accept("w-up", self.Spaceship.LookUp, [0])     
+        self.accept("s", self.Spaceship.LookDown, [1])
+        self.accept("s-up", self.Spaceship.LookDown, [0])     
+        self.accept("q", self.Spaceship.RollLeft, [1])
+        self.accept("q-up", self.Spaceship.RollLeft, [0])     
+        self.accept("e", self.Spaceship.RollRight, [1])
+        self.accept("e-up", self.Spaceship.RollRight, [0])    
+
+        
+    def SetCamera(self):
+
+        self.disable_mouse()
+
+        self.camera.reparentTo(self.Spaceship.modelNode)
+
+        self.camera.setFluidPos(0, 1, 0)
 
     def DrawCircles(self, centralObject, axis = 'z', radius = 500, count = 12, color = (1, 1, 1, 1)):
             
@@ -54,7 +80,7 @@ class MyApp(ShowBase):
         self.Planet5 = sjcRef.Planet(self.loader,"./Assets/Planets/protoPlanet.x", self.render, "Planet5", "./Assets/Planets/Gaseous_02.png", (4000, -2000, 1000), 450)
         self.Planet6 = sjcRef.Planet(self.loader,"./Assets/Planets/protoPlanet.x", self.render, "Planet6", "./Assets/Planets/Snowy_03.png", (300, -3000, -8000), 700)
         self.SpaceStation = sjcRef.SpaceStation(self.loader,"./Assets/SpaceStation/spaceStation.x", self.render, "SpaceStation", "./Assets/SpaceStation/SpaceStation1_Dif2.png", (1500, 1000, -100), 40)
-        self.Spaceship = sjcRef.Spaceship(self.loader,"./Assets/Spaceship/Dumbledore.x", self.render, "Spaceship", "./Assets/Spaceship/spacejet_C.png", Vec3(1000, 3000, -50), 50)
+        self.Spaceship = sjcRef.Spaceship(self.render, self.loader,"./Assets/Spaceship/Dumbledore.x", self.render, "Spaceship", "./Assets/Spaceship/spacejet_C.png", Vec3(1000, 3000, -50), 50, taskMgr = self.taskMgr)
 
 
     def DrawBaseballSeams(self, centralObject, droneName, step, numSeams, radius = 1):
