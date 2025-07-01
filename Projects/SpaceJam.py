@@ -1,8 +1,13 @@
 from direct.showbase.ShowBase import ShowBase
 import SpaceJamClasses as sjcRef
 import DefensePaths as dpRef
+import Player as pRef
+import CollideObjectBase as colBaseRef
 from panda3d.core import Vec3
 import math, random, sys
+from panda3d.core import CollisionTraverser, CollisionHandlerPusher
+from direct.task.Task import TaskManager
+from direct.task import Task
 
 class MyApp(ShowBase):
 
@@ -31,6 +36,24 @@ class MyApp(ShowBase):
         self.DrawCircles(self.Spaceship, axis = 'z', color = (0, 0, 1, 1)) 
 
         self.SetKeyBindings() 
+
+        self.HandleCollisions()
+        self.UpdateScene()
+
+    def UpdateScene(self):
+        
+        self.cTrav.traverse(self.render)
+
+        return Task.cont
+
+    def HandleCollisions(self):
+        
+        self.cTrav = CollisionTraverser()
+        self.pusher = CollisionHandlerPusher()
+        self.pusher.addCollider(self.Spaceship.collisionNode, self.Spaceship.modelNode)
+        self.cTrav.addCollider(self.Spaceship.collisionNode, self.pusher)
+        self.cTrav.showCollisions(self.render)
+        
 
     def SetKeyBindings(self):
         self.accept("space", self.Spaceship.Thrust, [1])
@@ -80,7 +103,7 @@ class MyApp(ShowBase):
         self.Planet5 = sjcRef.Planet(self.loader,"./Assets/Planets/protoPlanet.x", self.render, "Planet5", "./Assets/Planets/Gaseous_02.png", (4000, -2000, 1000), 450)
         self.Planet6 = sjcRef.Planet(self.loader,"./Assets/Planets/protoPlanet.x", self.render, "Planet6", "./Assets/Planets/Snowy_03.png", (300, -3000, -8000), 700)
         self.SpaceStation = sjcRef.SpaceStation(self.loader,"./Assets/SpaceStation/spaceStation.x", self.render, "SpaceStation", "./Assets/SpaceStation/SpaceStation1_Dif2.png", (1500, 1000, -100), 40)
-        self.Spaceship = sjcRef.Spaceship(self.render, self.loader,"./Assets/Spaceship/Dumbledore.x", self.render, "Spaceship", "./Assets/Spaceship/spacejet_C.png", Vec3(1000, 3000, -50), 50, taskMgr = self.taskMgr)
+        self.Spaceship = pRef.Spaceship(self.render, self.loader, self.taskMgr, self.accept, "./Assets/Spaceship/Dumbledore.x", self.render, "Spaceship", "./Assets/Spaceship/spacejet_C.png", Vec3(1000, 3000, -50), 50)
 
 
     def DrawBaseballSeams(self, centralObject, droneName, step, numSeams, radius = 1):
