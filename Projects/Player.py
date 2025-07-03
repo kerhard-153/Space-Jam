@@ -1,5 +1,5 @@
 from CollideObjectBase import SphereCollideObject
-from panda3d.core import Loader, NodePath, Vec3
+from panda3d.core import Loader, NodePath, Vec3, TransparencyAttrib
 from direct.task.Task import TaskManager
 from typing import Callable
 from direct.task import Task
@@ -180,7 +180,7 @@ class Spaceship(SphereCollideObject):
                 break
         return Task.cont
     
-    # def EnableHUD(self):
+    def EnableHUD(self):
 
-    #     self.Hud = OnscreenImage(image = "./Assets/Hud/Reticle.png", pos = Vec3(0, 0, 0), scale = 0.1)
-        # self.Hud.setTransparency(TransparencyAttrib.MAlpha)
+        self.Hud = OnscreenImage(image = "./Assets/HUD/center.png", pos = Vec3(0, 0, 0), scale = 0.2)
+        self.Hud.setTransparency(TransparencyAttrib.MAlpha)
