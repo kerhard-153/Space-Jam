@@ -16,7 +16,15 @@ class MyApp(ShowBase):
         
         ShowBase.__init__(self)
 
+        self.cTrav = CollisionTraverser()
+        self.pusher = CollisionHandlerPusher()
+        self.enableParticles()
         self.SetupScene()
+
+        self.cTrav.traverse(self.render)
+        self.pusher.addCollider(self.Spaceship.collisionNode, self.Spaceship.modelNode)
+        self.cTrav.addCollider(self.Spaceship.collisionNode, self.pusher)
+        self.cTrav.showCollisions(self.render)
 
         self.SetCamera()
 
@@ -36,24 +44,17 @@ class MyApp(ShowBase):
         self.DrawCircles(self.Spaceship, axis = 'z', color = (0, 0, 1, 1)) 
 
         self.SetKeyBindings() 
+        
 
-        self.HandleCollisions()
         self.UpdateScene()
+
+        
 
     def UpdateScene(self):
         
         self.cTrav.traverse(self.render)
 
         return Task.cont
-
-    def HandleCollisions(self):
-        
-        self.cTrav = CollisionTraverser()
-        self.pusher = CollisionHandlerPusher()
-        self.pusher.addCollider(self.Spaceship.collisionNode, self.Spaceship.modelNode)
-        self.cTrav.addCollider(self.Spaceship.collisionNode, self.pusher)
-        self.cTrav.showCollisions(self.render)
-        
 
     def SetKeyBindings(self):
         self.accept("space", self.Spaceship.Thrust, [1])
@@ -104,7 +105,8 @@ class MyApp(ShowBase):
         self.Planet5 = sjcRef.Planet(self.loader,"./Assets/Planets/protoPlanet.x", self.render, "Planet5", "./Assets/Planets/Gaseous_02.png", (4000, -2000, 1000), 450)
         self.Planet6 = sjcRef.Planet(self.loader,"./Assets/Planets/protoPlanet.x", self.render, "Planet6", "./Assets/Planets/Snowy_03.png", (300, -3000, -8000), 700)
         self.SpaceStation = sjcRef.SpaceStation(self.loader,"./Assets/SpaceStation/spaceStation.x", self.render, "SpaceStation", "./Assets/SpaceStation/SpaceStation1_Dif2.png", (1500, 1000, -100), 40)
-        self.Spaceship = pRef.Spaceship(self.render, self.loader, self.taskMgr, self.accept, "./Assets/Spaceship/Dumbledore.x", self.render, "Spaceship", "./Assets/Spaceship/spacejet_C.png", Vec3(1000, 3000, -50), 50)
+        self.Spaceship = pRef.Spaceship(self.render, self.loader, self.taskMgr, self.accept, "./Assets/Spaceship/Dumbledore.x", self.render, "Spaceship", "./Assets/Spaceship/spacejet_C.png", Vec3(1000, 3000, -50), 50, self.cTrav)
+        self.Spaceship.SetParticles()
         self.Hud = pRef.Spaceship.EnableHUD(self)
 
 

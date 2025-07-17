@@ -68,7 +68,7 @@ class Missile(SphereCollideObject):
 
     missileCount = 0
 
-    def __init__(self, renderNode, loader, taskMgr: TaskManager, accept: Callable[[str, Callable], None], modelPath: str, parentNode, nodeName: str, posVec, scaleVec: float = 1.0):
+    def __init__(self, renderNode, loader, taskMgr: TaskManager, accept: Callable[[str, Callable], None], modelPath: str, parentNode, nodeName: str, posVec, scaleVec: float):
 
         super(Missile, self).__init__(loader, modelPath, parentNode, nodeName, Vec3(0, 0, 0), 3.0)
         
