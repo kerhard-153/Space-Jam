@@ -1,0 +1,46 @@
+
+
+effectConfig {
+  factory {
+    type PointParticleFactory
+    lifespanBase 0.4
+    lifespanSpread 0.2
+    massBase 1.0
+    massSpread 0.0
+    terminalVelocityBase 400.0
+    terminalVelocitySpread 0.0
+  }
+  renderer {
+    type SpriteParticleRenderer
+    alphaMode BLEND
+    userAlpha 1.0
+    color [1 0.5 0 1]
+    xScaleFlag true
+    yScaleFlag true
+    animAngleFlag false
+    initialXScale 0.02
+    finalXScale 0.2
+    initialYScale 0.02
+    finalYScale 0.2
+    nonanimatedTheta 0.0
+    alphaBlendMethod BLEND_LINEAR
+    alphaDisable false
+    texture ./Assets/ParticleEffects/fireball.png
+  }
+  emitter {
+    type SphereVolumeEmitter
+    amplitude 10.0
+    amplitudeSpread 2.0
+    offsetForce [0.0 0.0 2.0]
+    explicitLaunchVector [0.0 0.0 1.0]
+    radiateOrigin [0.0 0.0 0.0]
+    radius 0.2
+  }
+  poolSize 64
+  birthRate 0.02
+  litterSize 10
+  litterSpread 5
+  systemLifespan 0.25
+  localVelocityFlag true
+  systemGrowsOlderFlag true
+}

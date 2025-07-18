@@ -1,5 +1,5 @@
 from CollideObjectBase import SphereCollideObject
-from panda3d.core import Loader, NodePath, Vec3, TransparencyAttrib
+from panda3d.core import Loader, NodePath, Vec3, Vec4, TransparencyAttrib
 from direct.task.Task import TaskManager
 from typing import Callable
 from direct.task import Task
@@ -8,8 +8,9 @@ from direct.gui.OnscreenImage import OnscreenImage
 from panda3d.core import CollisionHandlerEvent
 from panda3d.core import CollisionTraverser, CollisionHandlerPusher
 from direct.particles.ParticleEffect import ParticleEffect
-from direct.interval.LerpInterval import LerpFunc
+from direct.interval.LerpInterval import LerpFunc, LerpHprInterval
 import re
+from panda3d.core import Filename
 
 class Spaceship(SphereCollideObject):
 
@@ -48,41 +49,31 @@ class Spaceship(SphereCollideObject):
         intoNode = entry.getIntoNodePath().getName()
         print("intoNode: " + intoNode)
 
-        intoPosition = Vec3(entry.getSurfacePoint(self.render))
+        fromParts = fromNode.split('_')
+        intoParts = intoNode.split('_')
 
-        tempVar = fromNode.split('_')
-        print("tempVar: " + str (tempVar))
-        shooter = tempVar[0]
-        print("Shooter: " + str(shooter))
-        tempVar = intoNode.split('-')
-        print("TempVar1: " + str(tempVar))
-        tempVar = intoNode.split('_')
-        print("TempVar2: " + str(tempVar))
-        victim = tempVar[0]
-        print("Victim: " + str(victim))
+        shooter = fromParts[-1] if len(fromParts) > 1 else fromParts[0]
+        victim = intoParts[0]
 
-        pattern = r'[0-9]'
-        strippedString = re.sub(pattern, '', victim)
+        print("Shooter:", shooter)
+        print("Victim:", victim)
 
         if shooter == victim:
             print("Ignored self-collision")
             return
 
-        if strippedString in ["Drone", "Planet", "Space Station"]:
-            print(victim, ' hit at ', intoPosition)
-            self.DestroyObject(victim, intoPosition)
+        pattern = r'[0-9]'
+        strippedVictim = re.sub(pattern, '', victim)
+
+        if strippedVictim in ["Drone", "Planet", "SpaceStation"]:
+            hitPos = Vec3(entry.getSurfacePoint(self.render))
+            print(f"{victim} hit at {hitPos}")
+            self.DestroyObject(victim, hitPos)
 
         print(shooter + ' is DONE.')
 
         if shooter in Missile.Intervals:
             Missile.Intervals[shooter].finish()
-
-        # if (strippedString == "Drone" or strippedString == "Planet" or strippedString == "Space Station"):
-        #     print (victim, ' hit at ', intoPosition)
-        #     self.DestroyObject(victim, intoPosition)
-
-        # print(shooter + ' is DONE.')
-        # Missile.Intervals[shooter].finish()
 
     def DestroyObject(self, hitID, hitPosition):
         nodeID = self.render.find(hitID)
@@ -95,24 +86,24 @@ class Spaceship(SphereCollideObject):
         self.cntExplode += 1
         tag = 'particles-' + str(self.cntExplode)
 
-        self.explodeIntervals[tag] = LerpFunc(self.ExplodeLight, duration = 4.0)
-        self.explodeIntervals[tag].start
+        self.explodeIntervals[tag] = LerpFunc(self.ExplodeLight, duration = 1.0)
+        self.explodeIntervals[tag].start()
 
     def ExplodeLight(self, t):
         if t == 1.0 and self.explodeEffect:
             self.explodeEffect.disable()
 
         elif t == 0:
-            self.explodeEffect.start(self.explodeNode)
+            self.explodeEffect.start(self.explosionNode)
 
     def SetParticles(self):
 
-        
-        
         self.explodeEffect = ParticleEffect()
-        # self.explodeEffect.loadConfig('./Assets/ParticleEffects/basic_xpld_efx.ptf')
-        # self.explodeEffect.setScale(20)
+        self.explodeEffect.loadConfig(Filename.fromOsSpecific('C:/Users/kmerh/OneDrive/Desktop/Space Jam/Projects/Assets/ParticleEffects/basic_xpld_efx.ptf'))
+        self.explodeEffect.setScale(30)
         self.explosionNode = self.render.attachNewNode('ExplosionEffects')
+
+
 
     def Thrust(self, keyDown):
         if keyDown:
@@ -181,8 +172,8 @@ class Spaceship(SphereCollideObject):
     
     def EnableHUD(self):
 
-        self.Hud = OnscreenImage(image = "./Assets/HUD/center.png", pos = Vec3(0, 0, 0), scale = 0.2)
-        self.Hud.setTransparency(TransparencyAttrib.MAlpha)
+        self.reticle = OnscreenImage(image = "./Assets/HUD/center.png", pos = Vec3(0, 0, 0), scale = 0.2)
+        self.reticle.setTransparency(TransparencyAttrib.MAlpha)
     
     def ApplyThrust(self, task):
 
@@ -249,26 +240,14 @@ class Spaceship(SphereCollideObject):
     
     def RollLeft(self, keyDown):
         if keyDown:
-            self.taskMgr.add(self.ApplyRollLeft, "roll-left")
-        else:
-            self.taskMgr.remove("roll-left")
-
-    def ApplyRollLeft(self, task):
-        
-        rate = .5
-        self.modelNode.setR(self.modelNode.getR() + rate)
-        
-        return Task.cont
+            currentHpr = self.modelNode.getHpr()
+            newHpr = currentHpr + (0, 0, 90)
+            self.rollInterval = LerpHprInterval(self.modelNode, 0.5, newHpr)
+            self.rollInterval.start() 
     
     def RollRight(self, keyDown):
         if keyDown:
-            self.taskMgr.add(self.ApplyRollRight, "roll-right")
-        else:
-            self.taskMgr.remove("roll-right")
-
-    def ApplyRollRight(self, task):
-        
-        rate = .5
-        self.modelNode.setR(self.modelNode.getR() - rate)
-        
-        return Task.cont
+            currentHpr = self.modelNode.getHpr()
+            newHpr = currentHpr + (0, 0, -90)
+            self.rollInterval = LerpHprInterval(self.modelNode, 0.5, newHpr)
+            self.rollInterval.start()
