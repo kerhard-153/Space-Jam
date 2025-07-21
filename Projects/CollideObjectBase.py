@@ -2,7 +2,7 @@ from panda3d.core import PandaNode, Loader, NodePath, CollisionNode, CollisionSp
 
 class PlacedObject(PandaNode):
 
-    def __init__(self, loader: Loader, modelPath: str, parentNode: NodePath, nodeName: str):
+    def __init__(self, loader: Loader, modelPath: str, parentNode: NodePath, nodeName: str,):
 
         self.modelNode: NodePath = loader.loadModel(modelPath)
 
@@ -14,10 +14,28 @@ class PlacedObject(PandaNode):
 
 class CollidableObject(PlacedObject):
 
-    def __init__(self, loader: Loader, modelPath: str, parentNode: NodePath, nodeName: str):
+    def __init__(self, loader: Loader, modelPath: str, parentNode: NodePath, nodeName: str, maxHealth: int = 100):
         super(CollidableObject,self).__init__(loader, modelPath, parentNode, nodeName)
 
+        self.maxHealth = maxHealth
+        self.health = maxHealth
+        self.alive = True
+
         self.collisionNode = self.modelNode.attachNewNode(CollisionNode(nodeName + '_cNode'))
+        self.collisionNode.setPythonTag("object", self)
+
+    def TakeDamage(self, amount: int):
+        if not self.alive:
+            return
+        self.health -= amount
+        print(f"[{self.modelNode.getName()}] took {amount} damage. Health now: {self.health}")
+        if self.health <= 0:
+            self.Die()
+
+    def Die(self):
+        print(f"[{self.modelNode.getName()}] died.")
+        self.alive = False
+        self.modelNode.removeNode()
 
 class InverseSphereCollideObject(CollidableObject):
 
@@ -27,16 +45,16 @@ class InverseSphereCollideObject(CollidableObject):
 
 class SphereCollideObject(CollidableObject):
 
-    def __init__(self, loader: Loader, modelPath: str, parentNode: NodePath, nodeName: str, colPositionVec: Vec3, colRadius: float):
-        super(SphereCollideObject, self).__init__(loader, modelPath, parentNode, nodeName)
+    def __init__(self, loader: Loader, modelPath: str, parentNode: NodePath, nodeName: str, colPositionVec: Vec3, colRadius: float, maxHealth=100):
+        super(SphereCollideObject, self).__init__(loader, modelPath, parentNode, nodeName, maxHealth=maxHealth)
         self.collisionNode.node().addSolid(CollisionSphere(colPositionVec, colRadius))
-        self.collisionNode.show()
+        
 
 class CapsuleCollidableObject(CollidableObject):
 
-    def __init__(self, loader: Loader, modelPath: str, parentNode: NodePath, nodeName: str, ax: float, ay: float, az: float, bx: float, by: float, bz: float, r: float):
+    def __init__(self, loader: Loader, modelPath: str, parentNode: NodePath, nodeName: str, ax: float, ay: float, az: float, bx: float, by: float, bz: float, r: float, maxHealth=100):
 
-        super(CapsuleCollidableObject, self).__init__(loader, modelPath, parentNode, nodeName)
+        super(CapsuleCollidableObject, self).__init__(loader, modelPath, parentNode, nodeName, maxHealth=maxHealth)
 
         self.collisionNode.node().addSolid(CollisionCapsule(ax, ay, az, bx, by, bz, r))
-        self.collisionNode.show()
+        

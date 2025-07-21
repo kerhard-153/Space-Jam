@@ -16,6 +16,8 @@ class MyApp(ShowBase):
         
         ShowBase.__init__(self)
 
+        self.allGameObjects = {}
+
         self.cTrav = CollisionTraverser()
         self.pusher = CollisionHandlerPusher()
         self.enableParticles()
@@ -71,7 +73,8 @@ class MyApp(ShowBase):
         self.accept("q-up", self.Spaceship.RollLeft, [0])     
         self.accept("e", self.Spaceship.RollRight, [1])
         self.accept("e-up", self.Spaceship.RollRight, [0])
-        self.accept("f", self.Spaceship.Fire)    
+        self.accept("f", self.Spaceship.Fire)
+        self.accept("shift", self.Spaceship.ActivateBoost)    
 
         
     def SetCamera(self):
@@ -92,7 +95,8 @@ class MyApp(ShowBase):
 
             droneName = f"{axis}Drone{i}"
 
-            sjcRef.Drone(self.loader, "./Assets/DroneDefender/DroneDefender.x", self.render, droneName, "./Assets/DroneDefender/octotoad1_auv.png", position, 5,  color = color)
+            sjcRef.Drone(self.loader, "./Assets/DroneDefender/DroneDefender.x", self.render, droneName, "./Assets/DroneDefender/octotoad1_auv.png", position, 5, 50, color = color)
+            
 
         
 
@@ -101,19 +105,26 @@ class MyApp(ShowBase):
         self.Universe = sjcRef.Universe(self.loader,"./Assets/Universe/Universe.x", 
                                         self.render, "Universe", "./Assets/Universe/Universe.jpg", (0, 0, 0), 15000)
         self.Planet1 = sjcRef.Planet(self.loader,"./Assets/Planets/protoPlanet.x", 
-                                     self.render, "Planet1", "./Assets/Planets/Marshy_04.png", (-6000, -3000, -800), 250)
+                                     self.render, "Planet1", "./Assets/Planets/Marshy_04.png", (-6000, -3000, -800), 250, maxHealth=500)
+        self.allGameObjects[self.Planet1.modelNode.getName()] = self.Planet1
         self.Planet2 = sjcRef.Planet(self.loader,"./Assets/Planets/protoPlanet.x", 
-                                     self.render, "Planet2", "./Assets/Planets/Gaseous_11.png", (1000, -5000, 500), 350)
+                                     self.render, "Planet2", "./Assets/Planets/Gaseous_11.png", (1000, -5000, 500), 350, maxHealth=500)
+        self.allGameObjects[self.Planet2.modelNode.getName()] = self.Planet2
         self.Planet3 = sjcRef.Planet(self.loader,"./Assets/Planets/protoPlanet.x", 
-                                     self.render, "Planet3", "./Assets/Planets/Martian_01.png", (0, 7000, 0), 500)
+                                     self.render, "Planet3", "./Assets/Planets/Martian_01.png", (0, 7000, 0), 500, maxHealth=500)
+        self.allGameObjects[self.Planet3.modelNode.getName()] = self.Planet3
         self.Planet4 = sjcRef.Planet(self.loader,"./Assets/Planets/protoPlanet.x", 
-                                     self.render, "Planet4", "./Assets/Planets/Dusty_01.png", (8000, 8000, 800), 200)
+                                     self.render, "Planet4", "./Assets/Planets/Dusty_01.png", (8000, 8000, 800), 200, maxHealth=500)
+        self.allGameObjects[self.Planet4.modelNode.getName()] = self.Planet4
         self.Planet5 = sjcRef.Planet(self.loader,"./Assets/Planets/protoPlanet.x", 
-                                     self.render, "Planet5", "./Assets/Planets/Gaseous_02.png", (4000, -2000, 1000), 450)
+                                     self.render, "Planet5", "./Assets/Planets/Gaseous_02.png", (4000, -2000, 1000), 450, maxHealth=500)
+        self.allGameObjects[self.Planet5.modelNode.getName()] = self.Planet5
         self.Planet6 = sjcRef.Planet(self.loader,"./Assets/Planets/protoPlanet.x", 
-                                     self.render, "Planet6", "./Assets/Planets/Snowy_03.png", (300, -3000, -8000), 700)
+                                     self.render, "Planet6", "./Assets/Planets/Snowy_03.png", (300, -3000, -8000), 700, maxHealth=500)
+        self.allGameObjects[self.Planet6.modelNode.getName()] = self.Planet6
         self.SpaceStation = sjcRef.SpaceStation(self.loader,"./Assets/SpaceStation/spaceStation.x", 
-                                                self.render, "SpaceStation", "./Assets/SpaceStation/SpaceStation1_Dif2.png", (1500, 1000, -100), 40)
+                                                self.render, "SpaceStation", "./Assets/SpaceStation/SpaceStation1_Dif2.png", (1500, 1000, -100), 40, maxHealth=1000)
+        self.allGameObjects[self.SpaceStation.modelNode.getName()] = self.SpaceStation
         self.Spaceship = pRef.Spaceship(self.render, self.loader, self.taskMgr, self.accept, "./Assets/Spaceship/Dumbledore.x", 
                                         self.render, "Spaceship", "./Assets/Spaceship/spacejet_C.png", Vec3(1000, 3000, -50), 50, self.cTrav)
         self.Spaceship.SetParticles()
@@ -122,17 +133,19 @@ class MyApp(ShowBase):
         self.Sentinels = []
 
         for i in range(10):
+            droneName = f"Drone{i}"
             drone = sjcRef.Orbiter(self.loader, self.taskMgr, "./Assets/DroneDefender/DroneDefender.x", 
-                                self.render, "Drone", 6.0, "./Assets/DroneDefender/octotoad1_auv.png", 
-                                self.Planet5, 900, "MLB", self.Spaceship,
+                                self.render, droneName, 6.0, "./Assets/DroneDefender/octotoad1_auv.png", 
+                                self.Planet5, 900, "MLB", self.Spaceship, 50,
                                 orbitIndex=i)
             self.Sentinels.append(drone)
 
 
         for i in range(20):
+            droneName = f"Drone{i}"
             drone = sjcRef.Orbiter(self.loader, self.taskMgr, "./Assets/DroneDefender/DroneDefender.x", 
-                                self.render, "Drone", 6.0, "./Assets/DroneDefender/octotoad1_auv.png", 
-                                self.Planet2, 500, "Cloud", self.Spaceship,
+                                self.render, droneName, 6.0, "./Assets/DroneDefender/octotoad1_auv.png", 
+                                self.Planet2, 500, "Cloud", self.Spaceship, 50,
                                 orbitIndex=i)
             self.Sentinels.append(drone)
 
@@ -142,13 +155,15 @@ class MyApp(ShowBase):
         unitVec = dpRef.BaseballSeams(step, numSeams, B = 0.4)
         unitVec.normalize()
         position = unitVec * radius * 250 + centralObject.modelNode.getPos()
-        sjcRef.Drone(self.loader, "./Assets/DroneDefender/DroneDefender.x", self.render, droneName, "./Assets/DroneDefender/octotoad1_auv.png", position, 5)
+        drone = sjcRef.Drone(self.loader, "./Assets/DroneDefender/DroneDefender.x", self.render, droneName, "./Assets/DroneDefender/octotoad1_auv.png", position, 5, maxHealth=50)
+        self.allGameObjects[drone.modelNode.getName()] = drone
 
     def DrawCloudDefense(self, centralObject, droneName):
         unitVec = dpRef.Cloud()
         unitVec.normalize()
         position = unitVec * 500 + centralObject.modelNode.getPos()
-        sjcRef.Drone(self.loader, "./Assets/DroneDefender/DroneDefender.x", self.render, droneName, "./Assets/DroneDefender/octotoad1_auv.png", position, 10)
+        drone = sjcRef.Drone(self.loader, "./Assets/DroneDefender/DroneDefender.x", self.render, droneName, "./Assets/DroneDefender/octotoad1_auv.png", position, 10, maxHealth=50)
+        self.allGameObjects[drone.modelNode.getName()] = drone
 
 app = MyApp()
 app.run()

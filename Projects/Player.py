@@ -11,6 +11,7 @@ from direct.particles.ParticleEffect import ParticleEffect
 from direct.interval.LerpInterval import LerpFunc, LerpHprInterval
 import re
 from panda3d.core import Filename
+from panda3d.core import ClockObject
 
 class Spaceship(SphereCollideObject):
 
@@ -40,7 +41,41 @@ class Spaceship(SphereCollideObject):
         self.handler = CollisionHandlerEvent()
 
         self.handler.addInPattern('into')
-        self.accept('into', self.HandleInto)        
+        self.accept('into', self.HandleInto)  
+
+        self.baseSpeed = 20
+        self.boostMultiplier = 1.5
+        self.currentSpeed = self.baseSpeed
+        self.isBoosting = False
+        self.boostDuration = 3.0
+        self.boostCooldown = 5.0
+        self.lastBoostTime = -999  
+
+        
+
+    def ActivateBoost(self):
+        
+        globalClock = ClockObject.getGlobalClock()
+        currentTime = globalClock.getRealTime() 
+
+        if self.isBoosting:
+            return
+        if currentTime - self.lastBoostTime < self.boostCooldown:
+            print("Cooling down: Boost")   
+            return
+        
+        print("Boosting!")
+        self.isBoosting = True
+        self.currentSpeed = self.baseSpeed * self.boostMultiplier
+        self.lastBoostTime = currentTime
+
+        self.taskMgr.doMethodLater(self.boostDuration, self.EndBoost, "EndBoost")
+
+    def EndBoost(self, task):
+        print("UR DONE")
+        self.currentSpeed = self.baseSpeed
+        self.isBoosting = False
+        return task.done
 
     def HandleInto(self, entry):
 
@@ -65,22 +100,33 @@ class Spaceship(SphereCollideObject):
         pattern = r'[0-9]'
         strippedVictim = re.sub(pattern, '', victim)
 
+        victimNode = entry.getIntoNodePath()
+        victimObject = victimNode.getPythonTag("object")
+
+        
+
         if strippedVictim in ["Drone", "Planet", "SpaceStation"]:
             hitPos = Vec3(entry.getSurfacePoint(self.render))
             print(f"{victim} hit at {hitPos}")
-            self.DestroyObject(victim, hitPos)
+            victimObject.TakeDamage(Missile.damage)
+
+        if victimObject.health <= 0:
+            hitPos = Vec3(entry.getSurfacePoint(self.render))
+            print(f"{victim} hit at {hitPos}")
+            self.DestroyObject(victimObject, hitPos)
+
 
         print(shooter + ' is DONE.')
 
         if shooter in Missile.Intervals:
             Missile.Intervals[shooter].finish()
 
-    def DestroyObject(self, hitID, hitPosition):
-        nodeID = self.render.find(hitID)
-        nodeID.detachNode()
+    def DestroyObject(self, gameObject, hitPosition):
 
-        self.explosionNode.setPos(hitPosition)
-        self.Explode()
+            gameObject.modelNode.detachNode()
+
+            self.explosionNode.setPos(hitPosition)
+            self.Explode()
 
     def Explode(self):
         self.cntExplode += 1
@@ -177,7 +223,7 @@ class Spaceship(SphereCollideObject):
     
     def ApplyThrust(self, task):
 
-        rate = 20
+        rate = self.baseSpeed
         quat = self.modelNode.getQuat(self.render)
         forwardTraj = quat.getForward()
         forwardTraj.normalize()

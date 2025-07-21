@@ -21,11 +21,12 @@ class Universe(InverseSphereCollideObject):
 
 class Planet(SphereCollideObject):
 
-    def __init__(self, loader, modelPath: str, parentNode, nodeName: str, texPath: str, posVec, scaleVec: float):
+    def __init__(self, loader, modelPath: str, parentNode, nodeName: str, texPath: str, posVec, scaleVec: float, maxHealth: int):
 
-        super(Planet, self).__init__(loader, modelPath, parentNode, nodeName, Vec3(0, 0, 0), 1.05)
+        super(Planet, self).__init__(loader, modelPath, parentNode, nodeName, Vec3(0, 0, 0), 1.05, maxHealth=maxHealth)
         self.modelNode.setPos(posVec)
         self.modelNode.setScale(scaleVec)
+        self.maxHealth = maxHealth
 
         self.modelNode.setName(nodeName)
         tex = loader.loadTexture(texPath)
@@ -35,13 +36,14 @@ class Drone(SphereCollideObject):
     
     droneCount = 0
 
-    def __init__(self, loader, modelPath: str, parentNode, nodeName: str, texPath: str, posVec, scaleVec: float, color = (1, 1, 1, 1)):
-        super(Drone, self).__init__(loader, modelPath, parentNode, nodeName, Vec3(0, 0, 0), 3.0)
+    def __init__(self, loader, modelPath: str, parentNode, nodeName: str, texPath: str, posVec, scaleVec: float, maxHealth: int, color = (1, 1, 1, 1)):
+        super(Drone, self).__init__(loader, modelPath, parentNode, nodeName, Vec3(0, 0, 0), 3.0, maxHealth=maxHealth)
 
         # self.modelNode = loader.loadModel(modelPath)
         # self.modelNode.reparentTo(parentNode)
         self.modelNode.setPos(posVec)
         self.modelNode.setScale(scaleVec)
+        self.maxHealth = maxHealth
 
         self.modelNode.setName(nodeName)
         tex = loader.loadTexture(texPath)
@@ -51,10 +53,11 @@ class Drone(SphereCollideObject):
 
 class SpaceStation(CapsuleCollidableObject):
 
-    def __init__(self, loader, modelPath: str, parentNode, nodeName: str, texPath: str, posVec, scaleVec: float):
-        super(SpaceStation, self).__init__(loader, modelPath, parentNode, nodeName, 1, -1, 5, 1, -1, -5, 10)
+    def __init__(self, loader, modelPath: str, parentNode, nodeName: str, texPath: str, posVec, scaleVec: float, maxHealth: int):
+        super(SpaceStation, self).__init__(loader, modelPath, parentNode, nodeName, 1, -1, 5, 1, -1, -5, 10, maxHealth=maxHealth)
         self.modelNode.setPos(posVec)
         self.modelNode.setScale(scaleVec)
+        self.maxHealth = maxHealth
 
         self.modelNode.setName(nodeName)
         tex = loader.loadTexture(texPath)
@@ -68,6 +71,7 @@ class Missile(SphereCollideObject):
     Intervals = {}
 
     missileCount = 0
+    damage = 50
 
     def __init__(self, renderNode, loader, taskMgr: TaskManager, accept: Callable[[str, Callable], None], modelPath: str, parentNode, nodeName: str, posVec, scaleVec: float):
 
@@ -85,7 +89,8 @@ class Missile(SphereCollideObject):
         Missile.fireModels[nodeName] = self.modelNode
         Missile.cNodes[nodeName] = self.collisionNode 
         Missile.collisionSolids[nodeName] = self.collisionNode.node().getSolid(0)
-        Missile.cNodes[nodeName].show()
+
+
 
         print("Fire torpedo #" + str(Missile.missileCount))
 
@@ -96,17 +101,19 @@ class Orbiter(SphereCollideObject):
     cloudTimer = 240
 
     def __init__(self, loader: Loader, taskMgr:  TaskManager, modelPath: str, parentNode: NodePath, nodeName: str, scaleVec: float, texPath: str,
-                 centralObject: PlacedObject, orbitRadius: float, orbitType: str, staringAt: Vec3, orbitIndex):
-        super(Orbiter, self,).__init__(loader, modelPath, parentNode, nodeName, Vec3(0, 0, 0), 3.2)
+                 centralObject: PlacedObject, orbitRadius: float, orbitType: str, staringAt: Vec3, maxHealth: int, orbitIndex):
+        super(Orbiter, self,).__init__(loader, modelPath, parentNode, nodeName, Vec3(0, 0, 0), 3.2, maxHealth=maxHealth)
 
         self.taskMgr = taskMgr
         self.orbitType = orbitType
         self.modelNode.setScale(scaleVec)
         tex = loader.loadTexture(texPath)
         self.modelNode.setTexture(tex, 1)
+
         self.orbitObject = centralObject
         self.orbitRadius = orbitRadius
         self.staringAt = staringAt
+        self.maxHealth = maxHealth
 
         self.orbitIndex = orbitIndex
         Orbiter.numOrbits += 1
@@ -115,9 +122,6 @@ class Orbiter(SphereCollideObject):
 
         self.taskFlag = "Traveler-" + str(self.orbitIndex)
         taskMgr.add(self.Orbit, self.taskFlag)
-
-        self.modelNode.show()
-        print(f"[Orbiter Created] {nodeName} around {centralObject.modelNode.getName()} at radius {orbitRadius}")
 
 
 
@@ -136,3 +140,13 @@ class Orbiter(SphereCollideObject):
         self.modelNode.lookAt(self.staringAt.modelNode)
         return Task.cont
     
+    def Die(self):
+        if not self.alive:
+            return
+        print(f"[{self.modelNode.getName()}] died.")
+        self.alive = False
+
+        self.taskMgr.remove(self.taskFlag)
+
+        self.modelNode.removeNode()
+        
