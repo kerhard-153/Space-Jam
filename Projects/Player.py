@@ -30,7 +30,7 @@ class Spaceship(SphereCollideObject):
         self.modelNode.setTexture(tex, 1)
 
         self.reloadTime = .25
-        self.missileDistance = 4000
+        self.missileDistance = 7500
         self.missileBay = 1
 
         self.taskMgr.add(self.CheckIntervals, 'checkMissiles', 34)
@@ -87,7 +87,7 @@ class Spaceship(SphereCollideObject):
         fromParts = fromNode.split('_')
         intoParts = intoNode.split('_')
 
-        shooter = fromParts[-1] if len(fromParts) > 1 else fromParts[0]
+        shooter = fromParts[0]
         victim = intoParts[0]
 
         print("Shooter:", shooter)
@@ -118,8 +118,8 @@ class Spaceship(SphereCollideObject):
 
         print(shooter + ' is DONE.')
 
-        if shooter in Missile.Intervals:
-            Missile.Intervals[shooter].finish()
+
+        Missile.Intervals[shooter].finish()
 
     def DestroyObject(self, gameObject, hitPosition):
 
@@ -168,7 +168,7 @@ class Spaceship(SphereCollideObject):
 
 
             fireSolution = aim * travRate
-            infront = aim * 150
+            infront = aim * 200
             travVec = fireSolution + self.modelNode.getPos()
 
             self.missileBay -= 1
