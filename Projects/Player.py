@@ -276,9 +276,17 @@ class Spaceship(SphereCollideObject):
     
     def EnableHUD(self):
 
-        self.reticle = OnscreenImage(image = "./Assets/HUD/center.png", pos = Vec3(0, 0, 0), scale = 0.2)
-        self.reticle.setTransparency(TransparencyAttrib.MAlpha)
-    
+        windowProps = self.win.getProperties()
+        windowAspect = (windowProps.getXSize() / windowProps.getYSize()) + 0.5
+
+
+        self.hudImage = OnscreenImage(image = "./Assets/HUD/HUD_Screen.png", pos = Vec3(0, 0, 0), scale=(windowAspect, 1, 1), parent=self.aspect2d)
+        self.hudImage.setTransparency(TransparencyAttrib.MAlpha)
+        self.hudImage.setBin("fixed", 0)
+        self.hudImage.setDepthTest(False)
+        self.hudImage.setDepthWrite(False)
+
+            
     def ApplyThrust(self, task):
 
         rate = self.baseSpeed
