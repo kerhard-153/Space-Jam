@@ -71,9 +71,8 @@ class Missile(SphereCollideObject):
     Intervals = {}
 
     missileCount = 0
-    damage = 50
 
-    def __init__(self, renderNode, loader, taskMgr: TaskManager, accept: Callable[[str, Callable], None], modelPath: str, parentNode, nodeName: str, posVec, scaleVec: float):
+    def __init__(self, renderNode, loader, taskMgr: TaskManager, accept: Callable[[str, Callable], None], modelPath: str, parentNode, nodeName: str, posVec, scaleVec: float, damage=50):
 
         super(Missile, self).__init__(loader, modelPath, parentNode, nodeName, Vec3(0, 0, 0), 3.0)
         
@@ -82,6 +81,7 @@ class Missile(SphereCollideObject):
         self.render = renderNode
         self.modelNode.setPos(posVec)
         self.modelNode.setScale(scaleVec)
+        self.damage = damage
 
         self.modelNode.setName(nodeName)
 

@@ -74,7 +74,8 @@ class MyApp(ShowBase):
         self.accept("e", self.Spaceship.RollRight, [1])
         self.accept("e-up", self.Spaceship.RollRight, [0])
         self.accept("f", self.Spaceship.Fire)
-        self.accept("shift", self.Spaceship.ActivateBoost)    
+        self.accept("shift", self.Spaceship.ActivateBoost) 
+        self.accept("g", self.Spaceship.FireHeavyMisile)   
 
         
     def SetCamera(self):

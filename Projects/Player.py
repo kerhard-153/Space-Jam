@@ -32,6 +32,7 @@ class Spaceship(SphereCollideObject):
         self.reloadTime = .25
         self.missileDistance = 7500
         self.missileBay = 1
+        self.heavyMissileBay = 1
 
         self.taskMgr.add(self.CheckIntervals, 'checkMissiles', 34)
 
@@ -50,6 +51,9 @@ class Spaceship(SphereCollideObject):
         self.boostDuration = 3.0
         self.boostCooldown = 5.0
         self.lastBoostTime = -999  
+
+        self.lastHeavyMissileTime = 0
+        self.heavyMissileCooldown = 5.0
 
         
 
@@ -72,6 +76,7 @@ class Spaceship(SphereCollideObject):
         self.taskMgr.doMethodLater(self.boostDuration, self.EndBoost, "EndBoost")
 
     def EndBoost(self, task):
+
         print("UR DONE")
         self.currentSpeed = self.baseSpeed
         self.isBoosting = False
@@ -103,12 +108,14 @@ class Spaceship(SphereCollideObject):
         victimNode = entry.getIntoNodePath()
         victimObject = victimNode.getPythonTag("object")
 
-        
+        missileNode = entry.getFromNodePath()
+        missileObject = missileNode.getPythonTag("object")
 
         if strippedVictim in ["Drone", "Planet", "SpaceStation"]:
             hitPos = Vec3(entry.getSurfacePoint(self.render))
             print(f"{victim} hit at {hitPos}")
-            victimObject.TakeDamage(Missile.damage)
+            damage = missileObject.damage if hasattr(missileObject, "damage") else Missile.damage
+            victimObject.TakeDamage(damage)
 
         if victimObject.health <= 0:
             hitPos = Vec3(entry.getSurfacePoint(self.render))
@@ -175,9 +182,10 @@ class Spaceship(SphereCollideObject):
             tag = "Missile" + str(Missile.missileCount)
             posVec = self.modelNode.getPos() + infront
 
-            currentMissile = Missile(self.render, self.loader, self.taskMgr, self.accept, './Assets/Phaser/phaser.egg', self.render, tag, posVec, 4.0)
+            currentMissile = Missile(self.render, self.loader, self.taskMgr, self.accept, './Assets/Phaser/phaser.egg', self.render, tag, posVec, 4.0, 50)
             
             currentMissile.modelNode.setName(tag + '_' + "Spaceship")
+            currentMissile.modelNode.setPythonTag("object", currentMissile)
 
             Missile.Intervals[tag] = currentMissile.modelNode.posInterval(2.0, travVec, startPos = posVec, fluid = 1)
             Missile.Intervals[tag].start()
@@ -190,6 +198,56 @@ class Spaceship(SphereCollideObject):
                 return Task.cont
         else:
             print('Waiting to reload...')
+    
+    def FireHeavyMisile(self):
+
+        globalClock = ClockObject.getGlobalClock()
+        currentTime = globalClock.getRealTime() 
+        
+        if currentTime - self.lastHeavyMissileTime > self.heavyMissileCooldown:
+            self.heavyMissileBay += 1
+            if self.heavyMissileBay > 1:
+                self.heavyMissileBay = 1
+        
+        if currentTime - self.lastHeavyMissileTime < self.heavyMissileCooldown:
+            print("Cooling down: Heavy Missile")
+            return
+        
+        if self.heavyMissileBay <= 0:
+            print("No missiles left!")
+            return
+        
+        
+        
+        print("Firing Heavy Missile!")
+        self.lastHeavyMissileTime = currentTime
+            
+        travRate = self.missileDistance
+        aim = self.render.getRelativeVector(self.modelNode, Vec3.forward())
+        aim.normalize()
+
+
+        fireSolution = aim * travRate
+        infront = aim * 200
+        travVec = fireSolution + self.modelNode.getPos()
+
+        self.heavyMissileBay -= 1
+        tag = "Missile" + str(Missile.missileCount)
+        posVec = self.modelNode.getPos() + infront
+
+        heavyDamage = 200
+
+        currentMissile = Missile(self.render, self.loader, self.taskMgr, self.accept, './Assets/Phaser/phaser.egg', self.render, tag, posVec, 4.0, heavyDamage)
+        
+        currentMissile.modelNode.setName(tag + '_' + "Spaceship")
+        currentMissile.modelNode.setPythonTag("object", currentMissile)
+
+        Missile.Intervals[tag] = currentMissile.modelNode.posInterval(2.0, travVec, startPos = posVec, fluid = 1)
+        Missile.Intervals[tag].start()
+        
+        self.traverser.addCollider(currentMissile.collisionNode, self.handler)
+
+
             
     def Reload(self, task):
         if task.time > self.reloadTime:
@@ -200,7 +258,7 @@ class Spaceship(SphereCollideObject):
                 print("Reload complete.")
                 return Task.done
         elif task.time <= self.reloadTime:
-            print("Reload proceeding")
+            # print("Reload proceeding")
             return Task.cont
         
     def CheckIntervals(self, task):
