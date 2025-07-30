@@ -15,7 +15,7 @@ from panda3d.core import ClockObject
 
 class Spaceship(SphereCollideObject):
 
-    def __init__(self, renderNode, loader, taskMgr: TaskManager, accept: Callable[[str, Callable], None], modelPath: str, parentNode, nodeName: str, texPath: str, posVec, scaleVec: float, traverser: CollisionTraverser): 
+    def __init__(self, renderNode, loader, taskMgr: TaskManager, accept: Callable[[str, Callable], None], modelPath: str, parentNode, nodeName: str, texPath: str, posVec, scaleVec: float, traverser: CollisionTraverser, maxHealth): 
         super(Spaceship, self).__init__(loader, modelPath, parentNode, nodeName, Vec3(0, 0, 0), 3.0)
         self.taskMgr = taskMgr
         self.accept = accept
@@ -28,6 +28,7 @@ class Spaceship(SphereCollideObject):
         self.modelNode.setName(nodeName)
         tex = loader.loadTexture(texPath)
         self.modelNode.setTexture(tex, 1)
+        self.maxHealth = maxHealth
 
         self.reloadTime = .25
         self.missileDistance = 7500
@@ -44,8 +45,8 @@ class Spaceship(SphereCollideObject):
         self.handler.addInPattern('into')
         self.accept('into', self.HandleInto)  
 
-        self.baseSpeed = 20
-        self.boostMultiplier = 1.5
+        self.baseSpeed = 15
+        self.boostMultiplier = 2.0
         self.currentSpeed = self.baseSpeed
         self.isBoosting = False
         self.boostDuration = 3.0
@@ -85,18 +86,16 @@ class Spaceship(SphereCollideObject):
     def HandleInto(self, entry):
 
         fromNode = entry.getFromNodePath().getName()
-        print("fromNode: " + fromNode)
         intoNode = entry.getIntoNodePath().getName()
-        print("intoNode: " + intoNode)
+
+        print("fromNode:", fromNode)
+        print("intoNode:", intoNode)
 
         fromParts = fromNode.split('_')
         intoParts = intoNode.split('_')
 
         shooter = fromParts[0]
         victim = intoParts[0]
-
-        print("Shooter:", shooter)
-        print("Victim:", victim)
 
         if shooter == victim:
             print("Ignored self-collision")
@@ -114,48 +113,13 @@ class Spaceship(SphereCollideObject):
         if strippedVictim in ["Drone", "Planet", "SpaceStation"]:
             hitPos = Vec3(entry.getSurfacePoint(self.render))
             print(f"{victim} hit at {hitPos}")
+
             damage = missileObject.damage if hasattr(missileObject, "damage") else Missile.damage
-            victimObject.TakeDamage(damage)
 
-        if victimObject.health <= 0:
-            hitPos = Vec3(entry.getSurfacePoint(self.render))
-            print(f"{victim} hit at {hitPos}")
-            self.DestroyObject(victimObject, hitPos)
+            victimObject.TakeDamage(damage, self.render, self.taskMgr, hitPos)
 
-
-        print(shooter + ' is DONE.')
-
-
-        Missile.Intervals[shooter].finish()
-
-    def DestroyObject(self, gameObject, hitPosition):
-
-            gameObject.modelNode.detachNode()
-
-            self.explosionNode.setPos(hitPosition)
-            self.Explode()
-
-    def Explode(self):
-        self.cntExplode += 1
-        tag = 'particles-' + str(self.cntExplode)
-
-        self.explodeIntervals[tag] = LerpFunc(self.ExplodeLight, duration = 1.0)
-        self.explodeIntervals[tag].start()
-
-    def ExplodeLight(self, t):
-        if t == 1.0 and self.explodeEffect:
-            self.explodeEffect.disable()
-
-        elif t == 0:
-            self.explodeEffect.start(self.explosionNode)
-
-    def SetParticles(self):
-
-        self.explodeEffect = ParticleEffect()
-        self.explodeEffect.loadConfig(Filename.fromOsSpecific('C:/Users/kmerh/OneDrive/Desktop/Space Jam/Projects/Assets/ParticleEffects/basic_xpld_efx.ptf'))
-        self.explodeEffect.setScale(30)
-        self.explosionNode = self.render.attachNewNode('ExplosionEffects')
-
+        if shooter in Missile.Intervals:
+            Missile.Intervals[shooter].finish()
 
 
     def Thrust(self, keyDown):
@@ -289,7 +253,7 @@ class Spaceship(SphereCollideObject):
             
     def ApplyThrust(self, task):
 
-        rate = self.baseSpeed
+        rate = self.currentSpeed
         quat = self.modelNode.getQuat(self.render)
         forwardTraj = quat.getForward()
         forwardTraj.normalize()

@@ -6,6 +6,7 @@ from direct.task.Task import TaskManager
 import DefensePaths as defensePaths
 from panda3d.core import Vec3
 from CollideObjectBase import *
+from direct.interval.IntervalGlobal import Sequence
 
 class Universe(InverseSphereCollideObject):
 
@@ -39,8 +40,6 @@ class Drone(SphereCollideObject):
     def __init__(self, loader, modelPath: str, parentNode, nodeName: str, texPath: str, posVec, scaleVec: float, maxHealth: int, color = (1, 1, 1, 1)):
         super(Drone, self).__init__(loader, modelPath, parentNode, nodeName, Vec3(0, 0, 0), 3.0, maxHealth=maxHealth)
 
-        # self.modelNode = loader.loadModel(modelPath)
-        # self.modelNode.reparentTo(parentNode)
         self.modelNode.setPos(posVec)
         self.modelNode.setScale(scaleVec)
         self.maxHealth = maxHealth
@@ -150,3 +149,24 @@ class Orbiter(SphereCollideObject):
 
         self.modelNode.removeNode()
         
+
+class Wanderer(SphereCollideObject):
+    
+    numWanderers = 0
+
+    def __init__(self, loader, modelPath: str, parentNode: NodePath, nodeName: str, scaleVec, texPath: str, staringAt: Vec3, maxHealth=100):
+        super().__init__(loader, modelPath, parentNode, nodeName, Vec3(0, 0, 0), 3.2, maxHealth)
+
+        self.modelNode.setScale(scaleVec)
+        tex = loader.loadTexture(texPath)
+        self.modelNode.setTexture(tex, 1)
+        self.staringAt = staringAt
+        Wanderer.numWanderers += 1
+
+        posInterval0 = self.modelNode.posInterval(20, Vec3(300, 6000, 500), startPos = Vec3(0, 0, 0))
+        posInterval1 = self.modelNode.posInterval(20, Vec3(700, -2000, 100), startPos = Vec3(300, 6000, 500))
+        posInterval2 = self.modelNode.posInterval(20, Vec3(0, -900, -1400), startPos = Vec3(700, -2000, 100))
+
+        self.travelRoute = Sequence(posInterval0, posInterval1, posInterval2, name = "Traveler")
+
+        self.travelRoute.loop()

@@ -1,4 +1,7 @@
 from panda3d.core import PandaNode, Loader, NodePath, CollisionNode, CollisionSphere, CollisionInvSphere, CollisionCapsule, Vec3
+from direct.particles.ParticleEffect import ParticleEffect
+from panda3d.core import Filename, NodePath
+from direct.task import Task
 
 class PlacedObject(PandaNode):
 
@@ -24,18 +27,41 @@ class CollidableObject(PlacedObject):
         self.collisionNode = self.modelNode.attachNewNode(CollisionNode(nodeName + '_cNode'))
         self.collisionNode.setPythonTag("object", self)
 
-    def TakeDamage(self, amount: int):
+    def Explode(self, render, taskMgr, hitPosition):
+
+        self.cntExplode = str(getattr(self, 'cntExplode', 0) + 1)
+        tag = "explosion-" + self.cntExplode
+
+        explodeEffect = ParticleEffect()
+        explodeEffect.loadConfig(Filename.fromOsSpecific(
+            'C:/Users/kmerh/OneDrive/Desktop/Space Jam/Projects/Assets/ParticleEffects/explosion3.ptf'
+        ))
+        explodeEffect.setScale(70)
+
+        explosionNode = render.attachNewNode("ExplosionEffect" + tag)
+        explosionNode.setPos(hitPosition)
+        explosionNode.setTransparency(True)
+
+        explodeEffect.start(parent=explosionNode, renderParent=render)
+
+        def cleanup(task):
+            explodeEffect.cleanup()
+            explosionNode.removeNode()
+            return Task.done
+
+        taskMgr.doMethodLater(2.0, cleanup, 'explosion-cleanup' + tag)
+
+    def TakeDamage(self, amount: int, render, taskMgr, hitPosition):
         if not self.alive:
             return
         self.health -= amount
         print(f"[{self.modelNode.getName()}] took {amount} damage. Health now: {self.health}")
         if self.health <= 0:
-            self.Die()
-
-    def Die(self):
-        print(f"[{self.modelNode.getName()}] died.")
-        self.alive = False
-        self.modelNode.removeNode()
+            print(f"[{self.modelNode.getName()}] died.")
+            self.alive = False
+            self.Explode(render, taskMgr, hitPosition)
+            self.modelNode.detachNode()
+            
 
 class InverseSphereCollideObject(CollidableObject):
 
