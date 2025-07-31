@@ -15,12 +15,13 @@ from panda3d.core import ClockObject
 
 class Spaceship(SphereCollideObject):
 
-    def __init__(self, renderNode, loader, taskMgr: TaskManager, accept: Callable[[str, Callable], None], modelPath: str, parentNode, nodeName: str, texPath: str, posVec, scaleVec: float, traverser: CollisionTraverser, maxHealth): 
+    def __init__(self, renderNode, loader, app, taskMgr: TaskManager, accept: Callable[[str, Callable], None], modelPath: str, parentNode, nodeName: str, texPath: str, posVec, scaleVec: float, traverser: CollisionTraverser, maxHealth): 
         super(Spaceship, self).__init__(loader, modelPath, parentNode, nodeName, Vec3(0, 0, 0), 3.0)
         self.taskMgr = taskMgr
         self.accept = accept
         self.render = renderNode
         self.loader = loader
+        self.app = app
         
         self.modelNode.setPos(posVec)
         self.modelNode.setScale(scaleVec)
@@ -238,18 +239,26 @@ class Spaceship(SphereCollideObject):
                 break
         return Task.cont
     
-    def EnableHUD(self):
+    def EnableHUD(self, show: bool):
+        if show:
+            if not getattr(self, 'hudImage', None):
+                windowProps = self.app.win.getProperties()
+                windowAspect = (windowProps.getXSize() / windowProps.getYSize())
 
-        windowProps = self.win.getProperties()
-        windowAspect = (windowProps.getXSize() / windowProps.getYSize()) + 0.5
 
-
-        self.hudImage = OnscreenImage(image = "./Assets/HUD/HUD_Screen.png", pos = Vec3(0, 0, 0), scale=(windowAspect, 1, 1), parent=self.aspect2d)
-        self.hudImage.setTransparency(TransparencyAttrib.MAlpha)
-        self.hudImage.setBin("fixed", 0)
-        self.hudImage.setDepthTest(False)
-        self.hudImage.setDepthWrite(False)
-
+                self.hudImage = OnscreenImage(image = "./Assets/HUD/HUD_Screen.png", 
+                                              pos = Vec3(0, 0, 0), 
+                                              scale=(windowAspect, 1, 1), 
+                                              parent=self.app.aspect2d)
+                self.hudImage.setTransparency(TransparencyAttrib.MAlpha)
+                self.hudImage.setBin("fixed", 0)
+                self.hudImage.setDepthTest(False)
+                self.hudImage.setDepthWrite(False)
+            else:
+                self.hudImage.show()
+        else:
+            if hasattr(self, 'hudImage'):
+                self.hudImage.hide()
             
     def ApplyThrust(self, task):
 

@@ -154,7 +154,7 @@ class Wanderer(SphereCollideObject):
     
     numWanderers = 0
 
-    def __init__(self, loader, modelPath: str, parentNode: NodePath, nodeName: str, scaleVec, texPath: str, staringAt: Vec3, maxHealth=100):
+    def __init__(self, loader, modelPath: str, parentNode: NodePath, nodeName: str, scaleVec, texPath: str, staringAt: Vec3, routePoints: list[Vec3], maxHealth=100):
         super().__init__(loader, modelPath, parentNode, nodeName, Vec3(0, 0, 0), 3.2, maxHealth)
 
         self.modelNode.setScale(scaleVec)
@@ -163,10 +163,12 @@ class Wanderer(SphereCollideObject):
         self.staringAt = staringAt
         Wanderer.numWanderers += 1
 
-        posInterval0 = self.modelNode.posInterval(20, Vec3(300, 6000, 500), startPos = Vec3(0, 0, 0))
-        posInterval1 = self.modelNode.posInterval(20, Vec3(700, -2000, 100), startPos = Vec3(300, 6000, 500))
-        posInterval2 = self.modelNode.posInterval(20, Vec3(0, -900, -1400), startPos = Vec3(700, -2000, 100))
+        intervals = []
+        for i in range(len(routePoints)):
+            startPos = routePoints[i - 1] if i > 0 else routePoints[-1]
+            endPos = routePoints[i]
+            interval = self.modelNode.posInterval(20, endPos, startPos=startPos)
+            intervals.append(interval)
 
-        self.travelRoute = Sequence(posInterval0, posInterval1, posInterval2, name = "Traveler")
-
+        self.travelRoute = Sequence(*intervals, name=f"{nodeName}_TravelRoute")
         self.travelRoute.loop()
